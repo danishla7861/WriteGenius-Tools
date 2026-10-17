@@ -1,0 +1,6 @@
+{
+  "name": "WriteGenius Tools",
+  "description": "Comprehensive platform of 59 free online tools: AI Writing Toolkit, PDF Tools, Image Tools, AI Social Media Toolkit, and Student Utilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
