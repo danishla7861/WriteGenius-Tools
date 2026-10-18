@@ -1,0 +1,22 @@
+# Robots.txt for WriteGenius Tools
+User-agent: *
+Allow: /
+Allow: /tools
+Allow: /tools/*
+Allow: /category/*
+Allow: /guides
+Allow: /guides/*
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /faq
+
+# Disallow authenticated session pages
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+
+# Sitemap Index
+Sitemap: https://writegenius.tools/sitemap.xml

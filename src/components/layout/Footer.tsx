@@ -41,13 +41,21 @@ export const Footer: React.FC = () => {
               {TOOL_CATEGORIES.map((cat) => (
                 <li key={cat.id}>
                   <Link
-                    to={`/tools?category=${cat.id}`}
+                    to={`/category/${cat.id}`}
                     className="hover:text-[#4776FF] transition-colors"
                   >
                     {cat.name}
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  to="/guides"
+                  className="hover:text-[#4776FF] transition-colors font-medium text-[#4776FF]"
+                >
+                  Guides & Tutorials →
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -5,6 +5,7 @@ import { ALL_TOOLS, TOOL_CATEGORIES } from '../data/toolsData';
 import { ToolCard } from '../components/tools/ToolCard';
 import { ToolCategory } from '../types/tools';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
+import { updateDocumentSeo } from '../utils/seoUtils';
 
 export const AllToolsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14,6 +15,25 @@ export const AllToolsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<ToolCategory | 'all'>(initialCategory);
   const [filterType, setFilterType] = useState<'all' | 'free' | 'ai'>('all');
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+  React.useEffect(() => {
+    updateDocumentSeo({
+      title: 'All 60 Free Online Tools – AI Writing, PDF, Image & Student Utilities | WriteGenius',
+      description: 'Explore our complete catalog of 60 free online tools: AI paragraph writers, PDF mergers and compressors, image resizers, GPA calculators, and social media tools.',
+      canonicalPath: '/tools',
+      breadcrumbs: [
+        { name: 'Home', url: '/' },
+        { name: 'All Tools', url: '/tools' },
+      ],
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'WriteGenius Tools Studio Catalog',
+        description: 'Complete catalog of 60 free online tools across 5 categories.',
+        url: 'https://writegenius.tools/tools',
+      },
+    });
+  }, []);
 
   const filteredTools = useMemo(() => {
     return ALL_TOOLS.filter(tool => {

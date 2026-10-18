@@ -1,43 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { TOOL_MAP, TOOL_CATEGORIES, ALL_TOOLS } from '../data/toolsData';
 import { ToolLayout } from '../components/tools/ToolLayout';
-import { updateDocumentSeo } from '../utils/seoUtils';
-import { ArrowLeft, Search, Sparkles, Layers, ChevronRight, Compass } from 'lucide-react';
+import { addRecentTool } from '../utils/recentToolsUtils';
+import { ArrowLeft, Search, Sparkles, ChevronRight, Compass } from 'lucide-react';
 
 interface ToolDetailPageProps {
   onShowToast: (message: string, type?: 'success' | 'error') => void;
 }
 
 export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) => {
-  const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
-  const tool = slug ? TOOL_MAP[slug] : undefined;
-  const [sidebarSearch, setsidebarSearch] = useState('');
+  const { slug, toolSlug } = useParams<{ slug?: string; toolSlug?: string }>();
+  const activeSlug = toolSlug || slug;
+  const tool = activeSlug ? TOOL_MAP[activeSlug] : undefined;
+  const [sidebarSearch, setSidebarSearch] = useState('');
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (tool) {
-      updateDocumentSeo({
-        title: `${tool.title} – Professional Studio Tool | WriteGenius Tools`,
-        description: tool.fullDescription.slice(0, 155),
-        canonicalPath: `/${tool.slug}`,
-        schema: {
-          '@context': 'https://schema.org',
-          '@type': 'WebApplication',
-          name: tool.title,
-          description: tool.shortDescription,
-          applicationCategory: 'ProductivityApplication',
-          operatingSystem: 'All',
-          offers: {
-            '@type': 'Offer',
-            price: '0',
-            priceCurrency: 'USD',
-          },
-        },
-      });
-      window.scrollTo(0, 0);
+      addRecentTool(tool.slug);
     }
-  }, [tool]);
+  }, [activeSlug, tool]);
 
   if (!tool) {
     return (
@@ -56,16 +39,16 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
           className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-[#4776FF] to-[#8957FF] rounded-xl hover:opacity-90 transition-all shadow-lg"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Browse Tool Studio Directory</span>
+          <span>Browse 60+ Tools in Studio Directory</span>
         </Link>
       </div>
     );
   }
 
-  const categoryInfo = TOOL_CATEGORIES.find(c => c.id === tool.category);
-  const relatedTools = ALL_TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 5);
+  const categoryInfo = TOOL_CATEGORIES.find((c) => c.id === tool.category);
+  const relatedTools = ALL_TOOLS.filter((t) => t.category === tool.category && t.slug !== tool.slug).slice(0, 6);
   const filteredTools = sidebarSearch.trim()
-    ? ALL_TOOLS.filter(t => t.title.toLowerCase().includes(sidebarSearch.toLowerCase())).slice(0, 8)
+    ? ALL_TOOLS.filter((t) => t.title.toLowerCase().includes(sidebarSearch.toLowerCase())).slice(0, 8)
     : [];
 
   return (
@@ -85,7 +68,7 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
               <input
                 type="text"
                 value={sidebarSearch}
-                onChange={e => setsidebarSearch(e.target.value)}
+                onChange={(e) => setSidebarSearch(e.target.value)}
                 placeholder="Search 60+ tools..."
                 className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-[#090F1D] border border-[#263653] text-[#F8FAFF] placeholder-[#AAB8D0] focus:outline-none focus:ring-2 focus:ring-[#4776FF]"
               />
@@ -93,10 +76,10 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
 
             {filteredTools.length > 0 && (
               <div className="space-y-1 pt-2 border-t border-[#263653]">
-                {filteredTools.map(t => (
+                {filteredTools.map((t) => (
                   <Link
                     key={t.slug}
-                    to={`/${t.slug}`}
+                    to={`/tools/${t.slug}`}
                     className="flex items-center justify-between p-2 text-xs text-[#AAB8D0] hover:text-[#F8FAFF] hover:bg-[#111B30] rounded-lg transition-colors"
                   >
                     <span className="truncate">{t.title}</span>
@@ -110,15 +93,15 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
           {/* Categories Navigation */}
           <div className="p-4 rounded-2xl bg-[#0D1424] border border-[#263653] space-y-3 shadow-xl">
             <div className="text-xs font-bold text-[#F8FAFF] tracking-wider uppercase">
-              Categories
+              Tool Categories
             </div>
             <div className="space-y-1">
-              {TOOL_CATEGORIES.map(cat => {
+              {TOOL_CATEGORIES.map((cat) => {
                 const isActive = cat.id === tool.category;
                 return (
                   <Link
                     key={cat.id}
-                    to={`/tools?category=${cat.id}`}
+                    to={`/category/${cat.id}`}
                     className={`flex items-center justify-between p-2.5 text-xs font-medium rounded-xl transition-all ${
                       isActive
                         ? 'bg-gradient-to-r from-[#4776FF] to-[#8957FF] text-white shadow-md'
@@ -126,8 +109,8 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
                     }`}
                   >
                     <span className="truncate">{cat.name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#090F1D] text-[#AAB8D0]'}`}>
-                      {cat.count}
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#090F1D] text-[#AAB8D0]'}`}>
+                      {ALL_TOOLS.filter((t) => t.category === cat.id).length}
                     </span>
                   </Link>
                 );
@@ -142,10 +125,10 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
                 More in {categoryInfo?.name || 'Category'}
               </div>
               <div className="space-y-1">
-                {relatedTools.map(t => (
+                {relatedTools.map((t) => (
                   <Link
                     key={t.slug}
-                    to={`/${t.slug}`}
+                    to={`/tools/${t.slug}`}
                     className="flex items-center justify-between p-2 text-xs text-[#AAB8D0] hover:text-[#F8FAFF] hover:bg-[#111B30] rounded-lg transition-colors"
                   >
                     <span className="truncate">{t.title}</span>

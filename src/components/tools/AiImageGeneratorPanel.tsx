@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, Download, Copy, RefreshCw, Image as ImageIcon, Check, AlertCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, Download, Copy, RefreshCw, Image as ImageIcon, Check, AlertCircle, ArrowRight, X } from 'lucide-react';
 import { ToolDefinition } from '../../types/tools';
+import { recordToolUsage } from '../../utils/usageHistoryUtils';
 import { Link } from 'react-router-dom';
 
 interface AiImageGeneratorPanelProps {
@@ -17,6 +18,26 @@ export const AiImageGeneratorPanel: React.FC<AiImageGeneratorPanelProps> = ({ to
   const [error, setError] = useState<string | null>(null);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [uploadedPreview, setUploadedPreview] = useState<string | null>(null);
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setUploadedPreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeUploadedImage = () => {
+    setUploadedImage(null);
+    setUploadedPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const stylesList = [
     'Photorealistic',
@@ -67,6 +88,7 @@ export const AiImageGeneratorPanel: React.FC<AiImageGeneratorPanelProps> = ({ to
       }
 
       setGeneratedImages(data.images || []);
+      recordToolUsage(tool.slug, 'success');
       onShowToast('Successfully created studio images!', 'success');
     } catch (err: any) {
       console.error('Image generation error:', err);
@@ -110,6 +132,34 @@ export const AiImageGeneratorPanel: React.FC<AiImageGeneratorPanelProps> = ({ to
               className="w-full px-4 py-3 bg-[#090F1D] border border-[#263653] rounded-xl text-[#F8FAFF] placeholder-[#AAB8D0]/50 focus:outline-none focus:ring-2 focus:ring-[#4776FF] text-sm"
             />
           </div>
+
+          <div className="space-y-4 pt-4 border-t border-[#263653]">
+            <label className="block text-xs font-semibold text-[#AAB8D0] uppercase tracking-wider">
+              Optionally Upload an Image
+            </label>
+            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full px-4 py-3 bg-[#111B30] hover:bg-[#192744] border border-[#263653] rounded-xl text-[#F8FAFF] text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              <ImageIcon className="w-4 h-4" />
+              {uploadedImage ? 'Change Uploaded Image' : 'Upload Your Own Image'}
+            </button>
+            {uploadedPreview && (
+              <div className="relative w-full aspect-video bg-[#090F1D] rounded-xl overflow-hidden border border-[#263653]">
+                <img src={uploadedPreview} alt="Upload Preview" className="w-full h-full object-contain" />
+                <button
+                  type="button"
+                  onClick={removeUploadedImage}
+                  className="absolute top-2 right-2 p-1 bg-rose-900/80 text-white rounded-lg hover:bg-rose-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
 
           {/* Example Prompts */}
           <div className="space-y-2">

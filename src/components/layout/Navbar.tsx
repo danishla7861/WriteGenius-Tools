@@ -18,12 +18,12 @@ export const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenSear
 
   const navLinks = [
     { name: 'All Tools', href: '/tools' },
-    { name: 'AI Image Generator', href: '/tools/ai-image-generator' },
-    { name: 'Image Guide', href: '/guides/image-formats' },
-    { name: 'AI Writing', href: '/tools?category=ai-writing' },
-    { name: 'PDF Tools', href: '/tools?category=pdf-tools' },
-    { name: 'Image Tools', href: '/tools?category=image-tools' },
-    { name: 'Student Tools', href: '/tools?category=student-tools' },
+    { name: 'AI Writing', href: '/category/ai-writing' },
+    { name: 'PDF Tools', href: '/category/pdf-tools' },
+    { name: 'Image Tools', href: '/category/image-tools' },
+    { name: 'Student Tools', href: '/category/student-tools' },
+    { name: 'Social Tools', href: '/category/ai-social' },
+    { name: 'Guides', href: '/guides' },
   ];
 
   return (

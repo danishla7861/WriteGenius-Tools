@@ -12,6 +12,14 @@ import {
   AlertCircle,
   Cpu,
   Zap,
+  ChevronRight,
+  Home,
+  ShieldCheck,
+  CheckCircle2,
+  HelpCircle,
+  FileText,
+  UserCheck,
+  BookOpen,
 } from 'lucide-react';
 import { ToolDefinition } from '../../types/tools';
 import { copyToClipboard, downloadAsTxt } from '../../utils/downloadUtils';
@@ -22,7 +30,10 @@ import { ImageToolsPanel } from './ImageToolsPanel';
 import { StudentToolsPanel } from './StudentToolsPanel';
 import { AiImageGeneratorPanel } from './AiImageGeneratorPanel';
 import { AdBannerPlaceholder } from '../common/AdBannerPlaceholder';
-import { TOOL_MAP } from '../../data/toolsData';
+import { TOOL_MAP, TOOL_CATEGORIES } from '../../data/toolsData';
+import { getToolSeoData, ToolSeoData } from '../../data/toolSeoContent';
+import { updateDocumentSeo } from '../../utils/seoUtils';
+import { recordToolUsage } from '../../utils/usageHistoryUtils';
 
 interface ToolLayoutProps {
   tool: ToolDefinition;
@@ -39,11 +50,14 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [copied, setCopied] = useState(false);
 
-  // Initialize options with defaults from tool definition
+  const seoData: ToolSeoData = getToolSeoData(tool);
+  const categoryInfo = TOOL_CATEGORIES.find((c) => c.id === tool.category);
+
+  // Initialize options and SEO metadata whenever tool changes
   useEffect(() => {
     const defaultOpts: Record<string, string | number | boolean> = {};
     if (tool.options) {
-      tool.options.forEach(opt => {
+      tool.options.forEach((opt) => {
         defaultOpts[opt.id] = opt.defaultValue;
       });
     }
@@ -52,14 +66,42 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
     setSecondaryInputText('');
     setOutputText('');
     setErrorMessage(null);
-  }, [tool]);
+    setOpenFaqIndex(0);
 
-  // Live input metrics
+    // Dynamic SEO update with rich Schema.org structured data
+    updateDocumentSeo({
+      title: seoData.seoTitle,
+      description: seoData.metaDescription,
+      canonicalPath: `/tools/${tool.slug}`,
+      keywords: [seoData.primaryKeyword, ...seoData.secondaryKeywords],
+      breadcrumbs: [
+        { name: 'Home', url: '/' },
+        { name: categoryInfo?.name || 'Tools', url: `/category/${tool.category}` },
+        { name: tool.title, url: `/tools/${tool.slug}` },
+      ],
+      faqs: seoData.faqs,
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: tool.title,
+        description: tool.shortDescription,
+        applicationCategory: 'ProductivityApplication',
+        operatingSystem: 'All',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+        },
+      },
+    });
+  }, [tool.slug]);
+
+  // Live input metrics for text tools
   const inputMetrics = calculateReadability(inputText);
   const outputMetrics = calculateReadability(outputText);
 
   const handleOptionChange = (id: string, value: string | number | boolean) => {
-    setOptions(prev => ({ ...prev, [id]: value }));
+    setOptions((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleGenerate = async (mode: 'generate' | 'improve' | 'rewrite' | 'shorten' | 'expand' = 'generate') => {
@@ -100,6 +142,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
         onShowToast(msg, 'error');
       } else {
         setOutputText(data.output);
+        recordToolUsage(tool.slug, 'success');
         onShowToast('Generated successfully!', 'success');
       }
     } catch (err: any) {
@@ -132,29 +175,55 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
 
   return (
     <div className="space-y-8">
-      {/* Tool Header Section */}
-      <section className="p-6 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[#AAB8D0]">
-          <span className="capitalize">{tool.category.replace('-', ' ')}</span>
-          <span aria-hidden="true">·</span>
-          <span>{tool.isFreeClientSide ? 'Client-Side Utility' : 'AI-Powered Generator'}</span>
+      {/* 1. Tool Header & Breadcrumbs Section */}
+      <section className="p-6 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
+        {/* Breadcrumb Navigation */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-[#AAB8D0] flex-wrap">
+          <Link to="/" className="flex items-center gap-1 hover:text-[#F8FAFF] transition-colors">
+            <Home className="w-3.5 h-3.5 text-[#4776FF]" />
+            <span>Home</span>
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-[#263653]" />
+          <Link to={`/category/${tool.category}`} className="hover:text-[#F8FAFF] transition-colors capitalize">
+            {categoryInfo?.name || tool.category.replace('-', ' ')}
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-[#263653]" />
+          <span className="text-[#F8FAFF] font-medium" aria-current="page">
+            {tool.title}
+          </span>
+        </nav>
+
+        {/* Badges & Meta */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="px-2.5 py-0.5 rounded-full bg-[#111A2E] border border-[#263653] text-[#AAB8D0] font-medium capitalize">
+            {tool.category.replace('-', ' ')}
+          </span>
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+            tool.isFreeClientSide
+              ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800'
+              : 'bg-indigo-950/60 text-[#4776FF] border border-indigo-800'
+          }`}>
+            {tool.isFreeClientSide ? '100% Client-Side Privacy' : 'Generative AI Studio'}
+          </span>
           {tool.badge && (
-            <>
-              <span aria-hidden="true">·</span>
-              <span className="text-[#4776FF] font-semibold">{tool.badge}</span>
-            </>
+            <span className="px-2.5 py-0.5 rounded-full bg-[#4776FF]/20 text-[#4776FF] border border-[#4776FF]/40 text-xs font-semibold">
+              {tool.badge}
+            </span>
           )}
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFF] tracking-tight text-balance">
-          {tool.title}
-        </h1>
-        <p className="text-sm sm:text-base text-[#AAB8D0] max-w-3xl leading-relaxed">
-          {tool.fullDescription}
-        </p>
+        {/* H1 Heading & Description */}
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFF] tracking-tight">
+            {tool.title}
+          </h1>
+          <p className="text-sm sm:text-base text-[#AAB8D0] max-w-4xl leading-relaxed">
+            {tool.fullDescription}
+          </p>
+        </div>
       </section>
 
-      {/* Dedicated Workspace: PDF / Image / Student / Free Utility / AI Studio */}
+      {/* 2. Working Tool Interface & Live Result Preview */}
       {tool.slug === 'ai-image-generator' || tool.toolType === 'ai-image' ? (
         <AiImageGeneratorPanel tool={tool} onShowToast={onShowToast} />
       ) : tool.toolType === 'pdf' || tool.category === 'pdf-tools' ? (
@@ -201,7 +270,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
               <textarea
                 id="tool-main-input"
                 value={inputText}
-                onChange={e => setInputText(e.target.value)}
+                onChange={(e) => setInputText(e.target.value)}
                 placeholder={tool.inputPlaceholder}
                 rows={6}
                 className="w-full p-3.5 text-sm rounded-xl bg-[#090F1D] border border-[#263653] text-[#F8FAFF] placeholder-[#AAB8D0] focus:outline-none focus:ring-2 focus:ring-[#4776FF] transition-colors"
@@ -217,7 +286,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
                 <textarea
                   id="tool-secondary-input"
                   value={secondaryInputText}
-                  onChange={e => setSecondaryInputText(e.target.value)}
+                  onChange={(e) => setSecondaryInputText(e.target.value)}
                   placeholder={tool.secondaryInputPlaceholder}
                   rows={3}
                   className="w-full p-3 text-sm rounded-xl bg-[#090F1D] border border-[#263653] text-[#F8FAFF] placeholder-[#AAB8D0] focus:outline-none focus:ring-2 focus:ring-[#4776FF] transition-colors"
@@ -228,7 +297,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
             {/* Tool-Specific Options */}
             {tool.options && tool.options.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#263653]">
-                {tool.options.map(opt => (
+                {tool.options.map((opt) => (
                   <div key={opt.id} className="space-y-1">
                     <label htmlFor={`opt-${opt.id}`} className="text-xs font-semibold text-[#F8FAFF]">
                       {opt.label}
@@ -237,10 +306,10 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
                       <select
                         id={`opt-${opt.id}`}
                         value={String(options[opt.id] ?? opt.defaultValue)}
-                        onChange={e => handleOptionChange(opt.id, e.target.value)}
+                        onChange={(e) => handleOptionChange(opt.id, e.target.value)}
                         className="w-full p-2.5 text-xs rounded-xl bg-[#090F1D] border border-[#263653] text-[#F8FAFF] focus:outline-none focus:ring-2 focus:ring-[#4776FF]"
                       >
-                        {opt.options?.map(choice => (
+                        {opt.options?.map((choice) => (
                           <option key={choice.value} value={choice.value} className="bg-[#0D1424] text-[#F8FAFF]">
                             {choice.label}
                           </option>
@@ -312,7 +381,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
             )}
           </div>
 
-          {/* Right Column: Output & Refinement Studio */}
+          {/* Right Column: Live Output & Refinement Studio */}
           <div className="p-6 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#263653]">
               <div className="flex items-center gap-2">
@@ -360,7 +429,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
 
               <textarea
                 value={outputText}
-                onChange={e => setOutputText(e.target.value)}
+                onChange={(e) => setOutputText(e.target.value)}
                 placeholder="Generated text will appear here. You can edit the text directly, regenerate, or trigger quick improvements."
                 rows={12}
                 className="w-full p-4 text-sm rounded-xl bg-[#090F1D] border border-[#263653] text-[#F8FAFF] placeholder-[#AAB8D0] focus:outline-none focus:ring-2 focus:ring-[#4776FF] transition-colors font-sans leading-relaxed"
@@ -414,88 +483,254 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
       {/* Monetization / Sponsorship Slot */}
       <AdBannerPlaceholder slotId={`tool-${tool.slug}`} />
 
-      {/* Editorial Content: Instructions & Step-by-Step Guide */}
-      <section className="p-6 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
-        <h2 className="text-base font-bold text-[#F8FAFF]">
-          How to Use the {tool.title}
-        </h2>
-        <ol className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[#AAB8D0]">
-          {tool.instructions.map((inst, index) => (
-            <li key={index} className="flex items-start gap-3 p-3.5 rounded-xl bg-[#090F1D] border border-[#263653]">
-              <span className="font-mono font-bold text-[#4776FF] shrink-0">
-                0{index + 1}.
-              </span>
-              <span className="leading-relaxed text-[#F8FAFF]">{inst}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* FAQs Accordion */}
-      {tool.faqs && tool.faqs.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-base font-bold text-[#F8FAFF]">
-            Frequently Asked Questions
+      {/* 3. Deep Tool-Specific SEO Information Section */}
+      <div className="space-y-6 pt-4 border-t border-[#263653]/60">
+        
+        {/* Section A: What Is [Tool Name]? */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#4776FF] uppercase tracking-wider">
+            <BookOpen className="w-4 h-4" />
+            <span>Comprehensive Tool Overview</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+            What Is the {tool.title}?
           </h2>
-          <div className="divide-y divide-[#263653] rounded-2xl bg-[#0D1424] border border-[#263653] overflow-hidden shadow-xl">
-            {tool.faqs.map((faq, idx) => {
-              const isOpen = openFaqIndex === idx;
-              return (
-                <div key={idx} className="transition-colors">
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    className="w-full flex items-center justify-between p-4 text-left font-semibold text-xs text-[#F8FAFF] hover:bg-[#111B30] transition-colors"
-                  >
-                    <span>{faq.question}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-[#AAB8D0] transition-transform duration-200 ${
-                        isOpen ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 pb-4 text-xs text-[#AAB8D0] leading-relaxed">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="space-y-3 text-sm text-[#AAB8D0] leading-relaxed">
+            {seoData.whatIs.map((paragraph, idx) => (
+              <p key={idx}>{paragraph}</p>
+            ))}
           </div>
         </section>
-      )}
 
-      {/* Related Tools Links */}
-      {tool.relatedSlugs && tool.relatedSlugs.length > 0 && (
-        <section className="space-y-4 pt-4 border-t border-[#263653]">
-          <h2 className="text-base font-bold text-[#F8FAFF]">
-            Recommended Writing Tools
+        {/* Section B: What You Can Do With This Tool (Key Capabilities) */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+            Key Features and Capabilities
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {tool.relatedSlugs
-              .map(slug => TOOL_MAP[slug])
-              .filter(Boolean)
-              .map(rel => (
-                <Link
-                  key={rel.slug}
-                  to={`/${rel.slug}`}
-                  className="p-4 rounded-2xl bg-[#0D1424] border border-[#263653] hover:border-[#4776FF] transition-colors group shadow-xl"
-                >
-                  <span className="text-[11px] text-[#AAB8D0] capitalize">
-                    {rel.category.replace('-', ' ')}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {seoData.capabilities.map((cap, idx) => (
+              <div
+                key={idx}
+                className="flex items-start gap-3 p-4 rounded-xl bg-[#090F1D] border border-[#263653]"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span className="text-xs sm:text-sm text-[#F8FAFF] leading-relaxed">{cap}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Section C: Step-by-Step "How to Use" Guide */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+            How to Use the {tool.title} (Step-by-Step)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {seoData.stepByStep.map((item, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-xl bg-[#090F1D] border border-[#263653] space-y-1.5"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-[#4776FF] px-2 py-0.5 rounded-md bg-[#111A2E] border border-[#263653]">
+                    0{idx + 1}
                   </span>
-                  <h3 className="text-xs font-semibold text-[#F8FAFF] group-hover:text-[#4776FF] transition-colors mt-1">
-                    {rel.title}
+                  <h3 className="text-xs sm:text-sm font-semibold text-[#F8FAFF]">
+                    {item.step}
                   </h3>
-                  <p className="text-[11px] text-[#AAB8D0] line-clamp-2 mt-1">
-                    {rel.shortDescription}
-                  </p>
-                </Link>
-              ))}
+                </div>
+                <p className="text-xs text-[#AAB8D0] leading-relaxed pl-8">
+                  {item.detail}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
-      )}
+
+        {/* Section D: Supported Formats & Technical Limits */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+            Supported Formats & Technical Specifications
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="p-4 rounded-xl bg-[#090F1D] border border-[#263653] space-y-2">
+              <span className="text-[#AAB8D0] font-medium block">Accepted Inputs</span>
+              <ul className="space-y-1 text-[#F8FAFF]">
+                {seoData.supportedFormats.inputs.map((inp, i) => (
+                  <li key={i} className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4776FF]" />
+                    <span>{inp}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-4 rounded-xl bg-[#090F1D] border border-[#263653] space-y-2">
+              <span className="text-[#AAB8D0] font-medium block">Supported Outputs</span>
+              <ul className="space-y-1 text-[#F8FAFF]">
+                {seoData.supportedFormats.outputs.map((out, i) => (
+                  <li key={i} className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>{out}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-4 rounded-xl bg-[#090F1D] border border-[#263653] space-y-2">
+              <span className="text-[#AAB8D0] font-medium block">Processing Capacity</span>
+              <p className="text-[#F8FAFF] font-medium leading-relaxed">
+                {seoData.supportedFormats.maxLimit}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section E: Who Can Use This Tool? */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#4776FF] uppercase tracking-wider">
+            <UserCheck className="w-4 h-4" />
+            <span>Target Audience & Personas</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+            Who Should Use the {tool.title}?
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {seoData.targetAudience.map((item, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-xl bg-[#090F1D] border border-[#263653] space-y-1.5"
+              >
+                <h3 className="text-xs sm:text-sm font-semibold text-[#F8FAFF]">
+                  {item.persona}
+                </h3>
+                <p className="text-xs text-[#AAB8D0] leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Section F: Practical Examples & Real Use Cases */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+            Real-World Use Cases & Practical Examples
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {seoData.realUseCases.map((uc, idx) => (
+              <div
+                key={idx}
+                className="p-5 rounded-xl bg-[#090F1D] border border-[#263653] space-y-2.5"
+              >
+                <h3 className="text-sm font-bold text-[#F8FAFF]">
+                  {uc.title}
+                </h3>
+                <p className="text-xs text-[#AAB8D0] leading-relaxed">
+                  <strong className="text-[#F8FAFF]">Scenario:</strong> {uc.scenario}
+                </p>
+                <p className="text-xs text-emerald-400 leading-relaxed">
+                  <strong className="text-[#F8FAFF]">Key Benefit:</strong> {uc.benefit}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Section G: Privacy & Security Verified Details */}
+        <section className="p-6 sm:p-8 rounded-2xl bg-[#0D1424] border border-[#263653] shadow-xl space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Verified Privacy & Execution Architecture</span>
+          </div>
+          <h2 className="text-lg sm:text-xl font-bold text-[#F8FAFF]">
+            Data Security & Technical Limitations
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[#AAB8D0] pt-1">
+            <div className="p-4 rounded-xl bg-[#090F1D] border border-[#263653] space-y-1">
+              <span className="font-semibold text-[#F8FAFF] block">Privacy Commitment</span>
+              <p className="leading-relaxed">{seoData.limitationsAndPrivacy.privacy}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-[#090F1D] border border-[#263653] space-y-1">
+              <span className="font-semibold text-[#F8FAFF] block">Operational Boundaries</span>
+              <p className="leading-relaxed">{seoData.limitationsAndPrivacy.limitations}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section H: Frequently Asked Questions (FAQPage) */}
+        {seoData.faqs && seoData.faqs.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#4776FF] uppercase tracking-wider">
+              <HelpCircle className="w-4 h-4" />
+              <span>Answers to Common Queries</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+              Frequently Asked Questions About {tool.title}
+            </h2>
+            <div className="divide-y divide-[#263653] rounded-2xl bg-[#0D1424] border border-[#263653] overflow-hidden shadow-xl">
+              {seoData.faqs.map((faq, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div key={idx} className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      className="w-full flex items-center justify-between p-4 sm:p-5 text-left font-semibold text-xs sm:text-sm text-[#F8FAFF] hover:bg-[#111B30] transition-colors"
+                    >
+                      <span>{faq.question}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-[#AAB8D0] shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 sm:px-5 pb-5 text-xs sm:text-sm text-[#AAB8D0] leading-relaxed pt-1">
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Section I: Related Recommended Tools with Crawlable Links */}
+        {tool.relatedSlugs && tool.relatedSlugs.length > 0 && (
+          <section className="space-y-4 pt-4 border-t border-[#263653]">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFF]">
+              Explore Related {categoryInfo?.name || 'Studio'} Tools
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tool.relatedSlugs
+                .map((slug) => TOOL_MAP[slug])
+                .filter(Boolean)
+                .map((rel) => (
+                  <Link
+                    key={rel.slug}
+                    to={`/tools/${rel.slug}`}
+                    className="p-5 rounded-2xl bg-[#0D1424] border border-[#263653] hover:border-[#4776FF] transition-all group shadow-xl hover:-translate-y-0.5"
+                  >
+                    <span className="text-[11px] text-[#AAB8D0] font-mono capitalize">
+                      {rel.category.replace('-', ' ')}
+                    </span>
+                    <h3 className="text-sm font-semibold text-[#F8FAFF] group-hover:text-[#4776FF] transition-colors mt-1">
+                      {rel.title}
+                    </h3>
+                    <p className="text-xs text-[#AAB8D0] line-clamp-2 mt-1.5 leading-relaxed">
+                      {rel.shortDescription}
+                    </p>
+                    <div className="flex items-center gap-1.5 text-xs text-[#4776FF] font-medium mt-3">
+                      <span>Launch Tool</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </Link>
+                ))}
+            </div>
+          </section>
+        )}
+
+      </div>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { Navbar } from './components/layout/Navbar';
+import { SidebarLayout } from './components/layout/SidebarLayout';
 import { Footer } from './components/layout/Footer';
 import { SearchModal } from './components/common/SearchModal';
 import { NotificationToast, ToastMessage } from './components/common/NotificationToast';
@@ -9,13 +9,18 @@ import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { HomePage } from './pages/HomePage';
 import { AllToolsPage } from './pages/AllToolsPage';
 import { ToolDetailPage } from './pages/ToolDetailPage';
+import { CategoryPage } from './pages/CategoryPage';
+import { GuidesIndexPage } from './pages/GuidesIndexPage';
+import { ImageFormatGuidePage } from './pages/ImageFormatGuidePage';
+import { PdfOptimizationGuidePage } from './pages/PdfOptimizationGuidePage';
+import { AcademicWritingGuidePage } from './pages/AcademicWritingGuidePage';
+import { SocialMediaGrowthGuidePage } from './pages/SocialMediaGrowthGuidePage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
 import { CookiesPage } from './pages/CookiesPage';
 import { FaqPage } from './pages/FaqPage';
-import { ImageFormatGuidePage } from './pages/ImageFormatGuidePage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -58,42 +63,53 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen flex flex-col bg-[#070B14] text-[#F8FAFF] transition-colors selection:bg-[#4776FF]/30">
-          <Navbar
-            theme={theme}
-            onToggleTheme={toggleTheme}
-            onOpenSearch={() => setSearchOpen(true)}
-          />
+        <SidebarLayout
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onOpenSearch={() => setSearchOpen(true)}
+        >
+          <Routes>
+            {/* Core Index & Directories */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/tools" element={<AllToolsPage />} />
 
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/tools" element={<AllToolsPage />} />
-              <Route path="/login" element={<LoginPage onShowToast={showToast} />} />
-              <Route path="/signup" element={<SignupPage onShowToast={showToast} />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage onShowToast={showToast} />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/contact" element={<ContactPage onShowToast={showToast} />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/cookies" element={<CookiesPage />} />
-              <Route path="/faq" element={<FaqPage />} />
-              <Route path="/guides/image-formats" element={<ImageFormatGuidePage />} />
+            {/* Dedicated Category Landing Pages */}
+            <Route path="/category/:categoryId" element={<CategoryPage />} />
 
-              {/* Individual dedicated tool pages (60 tools) */}
-              <Route path="/:slug" element={<ToolDetailPage onShowToast={showToast} />} />
+            {/* Guides & Tutorials Section */}
+            <Route path="/guides" element={<GuidesIndexPage />} />
+            <Route path="/guides/image-formats" element={<ImageFormatGuidePage />} />
+            <Route path="/guides/pdf-optimization-guide" element={<PdfOptimizationGuidePage />} />
+            <Route path="/guides/academic-writing-and-gpa-guide" element={<AcademicWritingGuidePage />} />
+            <Route path="/guides/social-media-content-growth-guide" element={<SocialMediaGrowthGuidePage />} />
 
-              {/* 404 handler */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </main>
+            {/* Authentication & Account Routes */}
+            <Route path="/login" element={<LoginPage onShowToast={showToast} />} />
+            <Route path="/signup" element={<SignupPage onShowToast={showToast} />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage onShowToast={showToast} />} />
+
+            {/* Legal, Help & Company Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage onShowToast={showToast} />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/cookies" element={<CookiesPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+
+            {/* Individual Dedicated Tool Pages (/tools/:toolSlug AND /:slug for maximum discoverability) */}
+            <Route path="/tools/:toolSlug" element={<ToolDetailPage onShowToast={showToast} />} />
+            <Route path="/:slug" element={<ToolDetailPage onShowToast={showToast} />} />
+
+            {/* 404 handler */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
 
           <Footer />
 
           <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
           <NotificationToast toasts={toasts} onDismiss={dismissToast} />
           <OfflineIndicator />
-        </div>
+        </SidebarLayout>
       </Router>
     </AuthProvider>
   );

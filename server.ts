@@ -23,6 +23,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com; img-src 'self' data: https://images.unsplash.com;");
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
 });
 
@@ -180,7 +183,7 @@ app.post('/api/v1/ai/generate-image', rateLimiter, async (req: Request, res: Res
 
     // Attempt generation with Gemini API if client configured
     // Note: Bypassing remote API call when free tier quota is exhausted to prevent 429 warnings
-    const skipGeminiImage = process.env.SKIP_GEMINI_IMAGE === 'true' || true; // Set true to rely reliably on studio engine
+    const skipGeminiImage = process.env.SKIP_GEMINI_IMAGE === 'true';
 
     if (aiClient && !skipGeminiImage) {
       try {
@@ -230,7 +233,11 @@ app.post('/api/v1/ai/generate-image', rateLimiter, async (req: Request, res: Res
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('Error during AI image generation:', error?.message || error);
+    console.error('Error during AI image generation:', {
+      message: error.message,
+      stack: error.stack,
+      status: error.status,
+    });
     // Even on unexpected error, provide an image so user flow never breaks
     try {
       const fallbackArt = generateProceduralArt(req.body?.prompt || 'Abstract artwork', req.body?.style || 'Digital Art', req.body?.aspectRatio || '1:1');
@@ -286,22 +293,59 @@ app.get('/sitemap.xml', (req: Request, res: Response) => {
   const host = req.get('host') || 'writegenius.tools';
   const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
   const baseUrl = `${protocol}://${host}`;
+  const today = new Date().toISOString().split('T')[0];
 
-  const staticPages = ['', 'tools', 'about', 'contact', 'privacy', 'terms', 'cookies', 'faq'];
+  const staticPages = [
+    { path: '', priority: '1.0', changefreq: 'daily' },
+    { path: 'tools', priority: '0.9', changefreq: 'daily' },
+    { path: 'guides', priority: '0.8', changefreq: 'weekly' },
+    { path: 'about', priority: '0.5', changefreq: 'monthly' },
+    { path: 'contact', priority: '0.5', changefreq: 'monthly' },
+    { path: 'privacy', priority: '0.3', changefreq: 'monthly' },
+    { path: 'terms', priority: '0.3', changefreq: 'monthly' },
+    { path: 'cookies', priority: '0.3', changefreq: 'monthly' },
+    { path: 'faq', priority: '0.7', changefreq: 'weekly' },
+  ];
+
+  const categories = ['ai-writing', 'pdf-tools', 'image-tools', 'ai-social', 'student-tools'];
+  const guides = [
+    'image-formats',
+    'pdf-optimization-guide',
+    'academic-writing-and-gpa-guide',
+    'social-media-content-growth-guide',
+  ];
 
   const urls = [
     ...staticPages.map(
       p => `  <url>
-    <loc>${baseUrl}/${p}</loc>
+    <loc>${baseUrl}/${p.path}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`
+    ),
+    ...categories.map(
+      catId => `  <url>
+    <loc>${baseUrl}/category/${catId}</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>${p === '' ? '1.0' : '0.8'}</priority>
+    <priority>0.85</priority>
+  </url>`
+    ),
+    ...guides.map(
+      g => `  <url>
+    <loc>${baseUrl}/guides/${g}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
   </url>`
     ),
     ...ALL_TOOLS.map(
       tool => `  <url>
-    <loc>${baseUrl}/${tool.slug}</loc>
+    <loc>${baseUrl}/tools/${tool.slug}</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>`
     ),
   ];
