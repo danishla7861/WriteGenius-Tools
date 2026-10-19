@@ -8,9 +8,10 @@ interface ToolCardProps {
 }
 
 export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
+  const toolUrl = tool.slug === 'text-design-tool' ? '/text-design-tool' : `/tools/${tool.slug}`;
   return (
     <Link
-      to={`/tools/${tool.slug}`}
+      to={toolUrl}
       className="group relative flex flex-col justify-between p-6 rounded-2xl bg-[#0D1424] border border-[#263653] hover:border-[#4776FF] hover:shadow-xl hover:shadow-[#4776FF]/10 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4776FF] hover:-translate-y-0.5"
     >
       <div>

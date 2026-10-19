@@ -8,6 +8,7 @@ import { buildSystemInstruction, buildUserPrompt } from './src/server/prompts.ts
 import { ALL_TOOLS } from './src/data/toolsData.ts';
 import './scripts/patch-vite.js';
 import { generateProceduralArt } from './src/server/proceduralImage.ts';
+import { generateWithModelCascade, generateLocalFallback, generateAiTextDesign } from './src/server/aiGenerator.ts';
 
 dotenv.config();
 
@@ -56,7 +57,7 @@ app.get('/api/v1/health', (req: Request, res: Response) => {
     brand: 'WriteGenius Tools',
     version: '1.0.0',
     aiConfigured: !!aiClient,
-    model: 'gemini-3.8-flash',
+    model: 'gemini-3.5-flash-lite',
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
   });
@@ -78,6 +79,48 @@ app.get('/api/v1/tools', (req: Request, res: Response) => {
       badge: t.badge,
     })),
   });
+});
+
+/**
+ * Dynamic XML Sitemap
+ */
+app.get('/sitemap.xml', (req: Request, res: Response) => {
+  const baseUrl = `${req.protocol}://${req.get('host') || 'writegenius.tools'}`;
+  const staticRoutes = [
+    '',
+    '/tools',
+    '/text-design-tool',
+    ...TOOL_CATEGORIES.map(c => `/category/${c.id}`),
+  ];
+  const toolRoutes = ALL_TOOLS.map(t => `/tools/${t.slug}`);
+  const directRoutes = ALL_TOOLS.map(t => `/${t.slug}`);
+
+  const allUrls = Array.from(new Set([...staticRoutes, ...toolRoutes, ...directRoutes]));
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allUrls.map(u => `  <url>
+    <loc>${baseUrl}${u}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>${u === '' ? '1.0' : u.startsWith('/category') ? '0.8' : '0.9'}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+  res.header('Content-Type', 'application/xml');
+  res.send(xml);
+});
+
+/**
+ * Robots.txt
+ */
+app.get('/robots.txt', (req: Request, res: Response) => {
+  const baseUrl = `${req.protocol}://${req.get('host') || 'writegenius.tools'}`;
+  const robots = `User-agent: *
+Allow: /
+Sitemap: ${baseUrl}/sitemap.xml`;
+
+  res.header('Content-Type', 'text/plain');
+  res.send(robots);
 });
 
 /**
@@ -107,12 +150,20 @@ app.post('/api/v1/ai/generate', rateLimiter, async (req: Request, res: Response)
 
     // Verify AI service configuration
     if (!aiClient) {
-      res.status(503).json({
-        success: false,
-        requiresKey: true,
-        error: 'AI generation service is not currently configured with an active API key.',
-        message:
-          'To enable AI generation, please configure GEMINI_API_KEY in your environment secrets. Client-side tools (Word Counter, Readability, Case Converter, etc.) remain 100% functional without an API key.',
+      const fallbackOutput = generateLocalFallback({
+        toolSlug,
+        input,
+        secondaryInput: secondaryInput ? String(secondaryInput) : undefined,
+        options,
+        mode,
+      });
+
+      res.json({
+        success: true,
+        output: fallbackOutput,
+        toolSlug,
+        provider: 'studio-local-synthesis',
+        timestamp: new Date().toISOString(),
       });
       return;
     }
@@ -126,39 +177,67 @@ app.post('/api/v1/ai/generate', rateLimiter, async (req: Request, res: Response)
       mode,
     });
 
-    const response = await aiClient.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: userPrompt,
-      config: {
-        systemInstruction,
-        temperature: 0.7,
-      },
-    });
+    let outputText = '';
+    let provider = 'gemini-3.5-flash-lite';
 
-    const outputText = response.text?.trim() || '';
+    try {
+      const result = await generateWithModelCascade(aiClient, userPrompt, systemInstruction);
+      outputText = result.text;
+      provider = result.model;
+    } catch (modelCascadeError: any) {
+      console.warn('[AI Server] Cloud models unavailable, applying local synthesis fallback:', modelCascadeError?.message || modelCascadeError);
+      outputText = generateLocalFallback({
+        toolSlug,
+        input,
+        secondaryInput: secondaryInput ? String(secondaryInput) : undefined,
+        options,
+        mode,
+      });
+      provider = 'studio-local-synthesis';
+    }
 
     if (!outputText) {
-      res.status(502).json({
-        success: false,
-        error: 'The AI model returned an empty response. Please adjust your prompt and retry.',
+      outputText = generateLocalFallback({
+        toolSlug,
+        input,
+        secondaryInput: secondaryInput ? String(secondaryInput) : undefined,
+        options,
+        mode,
       });
-      return;
+      provider = 'studio-local-synthesis';
     }
 
     res.json({
       success: true,
       output: outputText,
       toolSlug,
+      provider,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('Error during AI generation:', error?.message || error);
-    const errorMessage = error?.message || 'Failed to process AI generation request.';
-    res.status(500).json({
-      success: false,
-      error: 'An unexpected error occurred while communicating with the AI service. Please try again.',
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
-    });
+    // Even in case of catastrophic error, return safe fallback so user workflow never breaks
+    try {
+      const fallback = generateLocalFallback({
+        toolSlug: req.body?.toolSlug || 'ai-paragraph-writer',
+        input: req.body?.input || '',
+        secondaryInput: req.body?.secondaryInput,
+        options: req.body?.options,
+        mode: req.body?.mode,
+      });
+      res.json({
+        success: true,
+        output: fallback,
+        toolSlug: req.body?.toolSlug,
+        provider: 'studio-local-synthesis',
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      res.status(500).json({
+        success: false,
+        error: 'Unable to process generation request. Please retry.',
+      });
+    }
   }
 });
 
@@ -254,6 +333,39 @@ app.post('/api/v1/ai/generate-image', rateLimiter, async (req: Request, res: Res
         error: error?.message || 'Failed to generate image.',
       });
     }
+  }
+});
+
+/**
+ * AI Text Design Generation Endpoint
+ * Converts natural language prompt into visual styling parameters & design state
+ */
+app.post('/api/v1/ai/generate-text-design', rateLimiter, async (req: Request, res: Response) => {
+  try {
+    const { prompt, fallbackRequested = false } = req.body;
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      res.status(400).json({ success: false, error: 'Design prompt cannot be empty.' });
+      return;
+    }
+
+    const result = await generateAiTextDesign(aiClient, prompt.trim(), Boolean(fallbackRequested));
+    res.json({
+      success: result.success,
+      design: result.design,
+      provider: result.provider,
+      explanation: result.explanation,
+      aiGenerated: result.aiGenerated,
+      error: result.error,
+      canUseFallback: result.canUseFallback,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('Error generating AI text design:', error?.message || error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process natural language design request.',
+      canUseFallback: true,
+    });
   }
 });
 

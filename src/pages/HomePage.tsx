@@ -16,6 +16,7 @@ import {
   Layers,
   Compass,
   Flame,
+  Type,
 } from 'lucide-react';
 import { TOOL_CATEGORIES, ALL_TOOLS } from '../data/toolsData';
 import { ToolCard } from '../components/tools/ToolCard';
@@ -64,6 +65,7 @@ export const HomePage: React.FC = () => {
 
   const popularTools = ALL_TOOLS.filter(t =>
     [
+      'text-design-tool',
       'ai-image-generator',
       'merge-pdf',
       'image-compressor',
@@ -216,6 +218,37 @@ export const HomePage: React.FC = () => {
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Featured Tool Spotlight: Text Design Tool */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="max-w-7xl mx-auto px-4">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0D1426] via-[#151D33] to-[#0D1426] border border-[#233554] p-6 sm:p-8 shadow-2xl">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-[#8957FF]/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+            <div className="space-y-3 text-center lg:text-left max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8957FF]/20 border border-[#8957FF]/40 text-xs font-bold text-[#8957FF]">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Featured Pro Studio Tool</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFF]">
+                Text Design Tool – 3D Typography & Neon Titles
+              </h2>
+              <p className="text-xs sm:text-sm text-[#AAB8D0] leading-relaxed">
+                Design custom headline graphics, neon glow titles, YouTube thumbnail text, and quote cards with 12 designer templates, transparent PNG export, and vector SVG downloads.
+              </p>
+            </div>
+            <Link
+              to="/text-design-tool"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#4776FF] to-[#8957FF] text-white text-xs font-bold shadow-xl hover:opacity-90 transition-all flex items-center gap-2 shrink-0 group"
+            >
+              <Type className="w-4 h-4" />
+              <span>Open Text Design Tool</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </section>
 

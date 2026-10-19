@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { TOOL_MAP, TOOL_CATEGORIES, ALL_TOOLS } from '../data/toolsData';
 import { ToolLayout } from '../components/tools/ToolLayout';
 import { addRecentTool } from '../utils/recentToolsUtils';
+import { getToolSeoData, ToolSeoData } from '../data/toolSeoContent';
+import { SEOHead } from '../components/common/SEOHead';
 import { ArrowLeft, Search, Sparkles, ChevronRight, Compass } from 'lucide-react';
 
 interface ToolDetailPageProps {
@@ -46,6 +48,7 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
   }
 
   const categoryInfo = TOOL_CATEGORIES.find((c) => c.id === tool.category);
+  const seoData: ToolSeoData = getToolSeoData(tool);
   const relatedTools = ALL_TOOLS.filter((t) => t.category === tool.category && t.slug !== tool.slug).slice(0, 6);
   const filteredTools = sidebarSearch.trim()
     ? ALL_TOOLS.filter((t) => t.title.toLowerCase().includes(sidebarSearch.toLowerCase())).slice(0, 8)
@@ -53,6 +56,31 @@ export const ToolDetailPage: React.FC<ToolDetailPageProps> = ({ onShowToast }) =
 
   return (
     <div className="min-h-screen bg-[#070B14] py-8 px-4 sm:px-6 lg:px-8">
+      <SEOHead
+        title={seoData.seoTitle}
+        description={seoData.metaDescription}
+        canonicalPath={`/tools/${tool.slug}`}
+        keywords={[seoData.primaryKeyword, ...seoData.secondaryKeywords]}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: categoryInfo?.name || 'Tools', url: `/category/${tool.category}` },
+          { name: tool.title, url: `/tools/${tool.slug}` },
+        ]}
+        faqs={seoData.faqs}
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'WebApplication',
+          name: tool.title,
+          description: tool.shortDescription,
+          applicationCategory: 'ProductivityApplication',
+          operatingSystem: 'All',
+          offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'USD',
+          },
+        }}
+      />
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left Sidebar: Studio Navigation & Tool Switcher */}

@@ -24,6 +24,7 @@ import { FaqPage } from './pages/FaqPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { TextDesignToolPage } from './pages/TextDesignToolPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { getInitialTheme, applyTheme, ThemeMode } from './utils/themeUtils';
 
@@ -95,6 +96,9 @@ export default function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/cookies" element={<CookiesPage />} />
             <Route path="/faq" element={<FaqPage />} />
+
+            {/* Dedicated Text Design Tool Page */}
+            <Route path="/text-design-tool" element={<TextDesignToolPage onShowToast={showToast} />} />
 
             {/* Individual Dedicated Tool Pages (/tools/:toolSlug AND /:slug for maximum discoverability) */}
             <Route path="/tools/:toolSlug" element={<ToolDetailPage onShowToast={showToast} />} />

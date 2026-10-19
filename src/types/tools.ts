@@ -3,7 +3,9 @@ export type ToolCategory =
   | 'pdf-tools'
   | 'image-tools'
   | 'ai-social'
-  | 'student-tools';
+  | 'student-tools'
+  | 'text-tools'
+  | 'text-design';
 
 export interface ToolCategoryInfo {
   id: ToolCategory;
@@ -40,7 +42,7 @@ export interface ToolFaq {
   answer: string;
 }
 
-export type ToolType = 'ai' | 'text-utility' | 'pdf' | 'image' | 'student';
+export type ToolType = 'ai' | 'text-utility' | 'pdf' | 'image' | 'student' | 'text-design';
 
 export interface ToolDefinition {
   slug: string;

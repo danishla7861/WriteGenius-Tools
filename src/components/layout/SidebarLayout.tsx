@@ -20,6 +20,7 @@ import {
   X,
   Search,
   Sparkles,
+  Type,
 } from 'lucide-react';
 import { TOOL_CATEGORIES } from '../../data/toolsData';
 import { useAuth } from '../../context/AuthContext';
@@ -108,6 +109,22 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
             >
               <Grid className="w-4 h-4" />
               <span>All 60 Tools</span>
+            </Link>
+            <Link
+              to="/text-design-tool"
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
+                isActive('/text-design-tool')
+                  ? 'bg-gradient-to-r from-[#4776FF]/20 to-[#8957FF]/20 text-[#4776FF] border border-[#4776FF]/30'
+                  : 'text-[#AAB8D0] hover:bg-[#111B30] hover:text-[#F8FAFF]'
+              }`}
+            >
+              <Type className="w-4 h-4 text-[#8957FF]" />
+              <div className="flex items-center justify-between flex-1">
+                <span>Text Design Tool</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#8957FF]/20 text-[#8957FF] font-mono font-bold">
+                  PRO
+                </span>
+              </div>
             </Link>
           </div>
 

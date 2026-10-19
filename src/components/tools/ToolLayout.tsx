@@ -29,6 +29,7 @@ import { PdfToolsPanel } from './PdfToolsPanel';
 import { ImageToolsPanel } from './ImageToolsPanel';
 import { StudentToolsPanel } from './StudentToolsPanel';
 import { AiImageGeneratorPanel } from './AiImageGeneratorPanel';
+import { TextDesignEditor } from './TextDesignEditor';
 import { AdBannerPlaceholder } from '../common/AdBannerPlaceholder';
 import { TOOL_MAP, TOOL_CATEGORIES } from '../../data/toolsData';
 import { getToolSeoData, ToolSeoData } from '../../data/toolSeoContent';
@@ -224,7 +225,9 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({ tool, onShowToast }) => 
       </section>
 
       {/* 2. Working Tool Interface & Live Result Preview */}
-      {tool.slug === 'ai-image-generator' || tool.toolType === 'ai-image' ? (
+      {tool.slug === 'text-design-tool' || tool.toolType === 'text-design' ? (
+        <TextDesignEditor onShowToast={onShowToast} />
+      ) : tool.slug === 'ai-image-generator' || tool.toolType === 'ai-image' ? (
         <AiImageGeneratorPanel tool={tool} onShowToast={onShowToast} />
       ) : tool.toolType === 'pdf' || tool.category === 'pdf-tools' ? (
         <PdfToolsPanel tool={tool} onShowToast={onShowToast} />

@@ -582,6 +582,109 @@ export const TOOL_SEO_CONTENT: Record<string, ToolSeoData> = {
       { question: 'Can I use this for Threads or TikTok too?', answer: 'Yes, these captions work seamlessly for TikTok descriptions, Threads posts, and Pinterest pins.' },
     ],
   },
+  'text-design-tool': {
+    primaryKeyword: 'text design tool online',
+    secondaryKeywords: [
+      'free text graphics maker',
+      'online typography designer',
+      '3D text generator',
+      'neon text editor',
+      'gradient text maker',
+      'YouTube thumbnail text creator',
+      'transparent PNG text maker',
+      'social media text banner editor',
+      'CSS text generator',
+      'React text typography component',
+      'Tailwind CSS text effects generator',
+      'SVG text generator online',
+      'HTML CSS text generator',
+    ],
+    seoTitle: 'Text Design Tool & Code Generator – Free Typography, 3D & CSS Maker',
+    metaDescription: 'Design stunning text graphics, 3D typography, neon glows, and generate production-ready HTML, CSS, React, Tailwind, and SVG code online for free.',
+    whatIs: [
+      'The Text Design Tool by WriteGenius is a professional, browser-based typography suite, graphic editor, and code generator. It empowers creators, marketers, educators, and web developers to craft high-impact titles, quotes, logos, and banners while automatically generating clean production code in HTML, CSS, React JSX, Tailwind CSS, SVG, and JavaScript.',
+      'Featuring 12 pre-built designer templates, full Google Fonts library integration, multi-color gradient fills, glowing neon shadows, retro 3D extrusion, custom background uploads, live DOM/SVG preview, and transparent PNG/code export, it delivers studio-grade visual assets and front-end code in seconds.',
+    ],
+    capabilities: [
+      'Dual-Mode Design & Code Generator: Seamlessly toggle between visual WYSIWYG canvas design mode and developer code generator mode with real-time state synchronization.',
+      '7 Production Code Formats: Instantly generate clean code in HTML, pure CSS, complete HTML+CSS standalone files, modern React JSX/TSX components, modern Tailwind CSS with arbitrary values, scalable vector SVG, and HTML5 Canvas JavaScript.',
+      'Live DOM & SVG Preview: Side-by-side live rendered preview in real HTML/CSS, SVG, and Canvas with viewport emulation (Desktop, Tablet 768px, Mobile 375px).',
+      '12 Ready-to-Use Designer Templates: Modern, Bold Typography, Neon Glow, Gradient Text, Minimal, Elegant, 3D-Style, Social Media Post, YouTube Thumbnail, Promotional Poster, Quote Card, and Gaming Logo.',
+      'Extensive Typography Library: High-character Google Fonts including Bebas Neue, Montserrat, Poppins, Playfair Display, Orbitron, Pacifico, Cinzel, Anton, Righteous, and Caveat.',
+      'Advanced Color Controls: Solid color picker, linear angle gradients with curated presets (Sunset, Cyber Neon, Royal Velvet, Ocean Blue, Golden Sun, Emerald Green).',
+      'Text Effects Suite: Text outline stroke with adjustable width, multi-layer glow shadow, and real isometric 3D extrusion shadows.',
+      'Flexible Canvas Presets: Instant 1:1 Square, 16:9 Landscape (YouTube), 9:16 Story/Reel, 4:5 Portrait, Twitter Banner, and Custom Dimensions.',
+      'Background Customization: Transparent PNG support, solid colors, gradient backdrops, and user image upload with blur and opacity controls.',
+      'Multi-Format High-Res Export: Download crystal-clear PNG (with transparency), JPG, vector SVG, or copy/download code files (.html, .css, .jsx, .svg, .js) with one click.',
+    ],
+    stepByStep: [
+      { step: 'Enter Text Content', detail: 'Type your main headline and optional subtitle into the controls panel or code synchronizer.' },
+      { step: 'Select a Template or Font', detail: 'Click one of 12 instant templates or customize font family, size, weight, and alignment.' },
+      { step: 'Style Colors & Effects', detail: 'Choose a solid color or gradient, enable 3D extrusion shadow, neon glow, or outline stroke.' },
+      { step: 'Switch to Code Mode', detail: 'Toggle to Code Mode to select from HTML, CSS, React, Tailwind, SVG, or JavaScript formats with customizable options.' },
+      { step: 'Export & Copy', detail: 'Download high-res PNG/JPG/SVG graphics or copy production code with a single click.' },
+    ],
+    supportedFormats: {
+      inputs: ['Text input', 'Subtitle input', 'Custom image uploads (PNG, JPG, WebP)'],
+      outputs: ['Transparent PNG', 'High-Res JPG', 'Scalable Vector SVG', 'HTML & CSS Code', 'React JSX/TSX', 'Tailwind CSS', 'Canvas JavaScript', 'Direct Clipboard Copy'],
+      maxLimit: 'Up to 3x Ultra-HD export resolution (3840px+) and zero code generation limits',
+    },
+    targetAudience: [
+      { persona: 'YouTube & Video Creators', description: 'Crafting bold, click-worthy video thumbnail text and title overlays with high-contrast outlines.' },
+      { persona: 'Social Media Managers', description: 'Designing eye-catching Instagram quote cards, TikTok cover titles, and promotional announcement banners.' },
+      { persona: 'Streamers & Esports Gamers', description: 'Generating glowing neon gamer tags, team logos, and overlay headers.' },
+      { persona: 'E-commerce & Marketers', description: 'Creating sale announcement flyers, product hero labels, and discount graphic badges.' },
+    ],
+    realUseCases: [
+      {
+        title: 'High-CTR YouTube Thumbnail Headline',
+        scenario: 'A video creator needs bold yellow-and-white text with a thick black outline that pops on mobile feeds.',
+        benefit: 'Select the YouTube Thumbnail template, type the hook, and export a high-contrast transparent PNG in under 30 seconds.',
+      },
+      {
+        title: 'Cyberpunk Neon Gaming Banner',
+        scenario: 'A Twitch streamer wants electric glowing neon text for their channel header and offline screen.',
+        benefit: 'The Neon Glow template delivers electric cyan/magenta lighting with intense multi-stage bloom on a dark backdrop.',
+      },
+      {
+        title: 'Transparent Brand Watermark / Sticker',
+        scenario: 'A creator wants a stylized typography logo to stamp over photos without any background box.',
+        benefit: 'Enabling Transparent Background produces a sharp alpha-channel PNG that overlays seamlessly on any photo.',
+      },
+      {
+        title: 'Inspiring Quote Card for LinkedIn & Instagram',
+        scenario: 'A business coach publishes weekly thought leadership quotes with elegant editorial typography.',
+        benefit: 'The Quote Card template formats quotation marks, italicized serif font, and author attribution with pristine spacing.',
+      },
+    ],
+    limitationsAndPrivacy: {
+      privacy: '100% Client-Side Privacy: All rendering and canvas operations run locally in your web browser. Your text and uploaded images never leave your computer.',
+      limitations: 'For extremely large custom canvas dimensions (over 4000x4000), export speed depends on your local device RAM and GPU acceleration.',
+      offlineCapable: true,
+    },
+    faqs: [
+      {
+        question: 'Is the Text Design Tool completely free?',
+        answer: 'Yes! The Text Design Tool is 100% free with unlimited exports, no watermarks, and no sign-up required.',
+      },
+      {
+        question: 'Can I export images with a transparent background?',
+        answer: 'Yes. Simply toggle the "Transparent Background" switch, and your PNG export will save with a full alpha channel—ideal for watermarks, overlays, and stickers.',
+      },
+      {
+        question: 'How do I copy my design directly without saving a file?',
+        answer: 'Click the "Copy Image" button. The rendered graphic is copied to your operating system clipboard as a PNG, allowing you to paste directly into Canva, Discord, Slack, Photoshop, or Twitter.',
+      },
+      {
+        question: 'Can I use the exported text designs commercially?',
+        answer: 'Yes. All fonts used in WriteGenius Tools are open-source Google Fonts licensed under SIL Open Font License or Apache 2.0, allowing commercial use in YouTube videos, merchandise, advertising, and client work.',
+      },
+      {
+        question: 'Does the tool work on mobile phones and tablets?',
+        answer: 'Yes, the editor is responsive and touch-friendly. You can drag text, tweak sliders, and download high-resolution graphics directly on your smartphone or iPad.',
+      },
+    ],
+  },
 };
 
 /**
