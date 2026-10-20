@@ -128,48 +128,141 @@ export const TextDesignAiPromptCard: React.FC<TextDesignAiPromptCardProps> = ({
     setLoading(true);
     setError(null);
 
+    const getClientLocalDesign = (promptText: string) => {
+      const lower = promptText.toLowerCase();
+      let mainText = promptText.split('.')[0].slice(0, 30).toUpperCase() || 'CUSTOM DESIGN';
+      let fontFamily = 'Montserrat, sans-serif';
+      let textColor = '#F8FAFF';
+      let gradientColors: [string, string] = ['#4776FF', '#8957FF'];
+      let textColorMode: 'solid' | 'gradient' = 'gradient';
+      let bgGradientColors: [string, string] = ['#070B14', '#111A2E'];
+      let shadowColor = 'rgba(71, 118, 255, 0.4)';
+      let threeDEnabled = false;
+
+      if (lower.includes('neon') || lower.includes('cyberpunk') || lower.includes('glow')) {
+        fontFamily = 'Orbitron, sans-serif';
+        textColor = '#00F2FE';
+        gradientColors = ['#00F2FE', '#4FACFE'];
+        bgGradientColors = ['#040711', '#0A1226'];
+        shadowColor = '#00F2FE';
+        threeDEnabled = true;
+      } else if (lower.includes('gold') || lower.includes('luxury') || lower.includes('elegant')) {
+        fontFamily = '"Playfair Display", serif';
+        gradientColors = ['#BF953F', '#FCF6BA'];
+        bgGradientColors = ['#0F0F0F', '#1F1A14'];
+      } else if (lower.includes('gaming') || lower.includes('esports')) {
+        fontFamily = 'Bangers, cursive';
+        gradientColors = ['#FF2A85', '#7928CA'];
+        bgGradientColors = ['#0A0814', '#1A0C2E'];
+        threeDEnabled = true;
+      }
+
+      return {
+        mainText,
+        subtitleText: trimmedPrompt.slice(0, 60),
+        subtitleEnabled: true,
+        fontFamily,
+        fontSize: 72,
+        fontWeight: '800' as const,
+        isBold: true,
+        isItalic: lower.includes('italic'),
+        isUnderline: false,
+        textTransform: 'uppercase' as const,
+        textAlign: 'center' as const,
+        letterSpacing: 4,
+        lineHeight: 1.1,
+        textColorMode,
+        textColor,
+        gradientColors,
+        gradientAngle: 45,
+        textOpacity: 1,
+        textRotation: 0,
+        posX: 0,
+        posY: 0,
+        outlineEnabled: true,
+        outlineColor: '#000000',
+        outlineWidth: 4,
+        shadowEnabled: true,
+        shadowColor,
+        shadowBlur: 20,
+        shadowOffsetX: 0,
+        shadowOffsetY: 8,
+        threeDEnabled,
+        threeDDepth: 8,
+        threeDColor: '#1e293b',
+        threeDDirection: 'bottom-right' as const,
+        aspectPreset: '16:9',
+        canvasWidth: 1280,
+        canvasHeight: 720,
+        bgMode: 'gradient' as const,
+        bgColor: '#070B14',
+        bgGradientColors,
+        bgGradientAngle: 145,
+        bgImage: null,
+        bgImageOpacity: 0.8,
+        bgImageBlur: 0,
+        bgImageFit: 'cover' as const,
+        subtitleFontSize: 18,
+        subtitleFontFamily: 'Inter, sans-serif',
+        subtitleColor: '#4776FF',
+        subtitleLetterSpacing: 6,
+        subtitleOffsetY: 35,
+      };
+    };
+
     try {
-      const response = await fetch('/api/v1/ai/generate-text-design', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: trimmedPrompt,
-          fallbackRequested: useFallback,
-        }),
-      });
+      let response: Response | null = null;
+      let data: any = null;
+      try {
+        response = await fetch('/api/v1/ai/generate-text-design', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: trimmedPrompt, fallbackRequested: useFallback }),
+        });
+        if (response.ok) {
+          data = await response.json();
+        }
+      } catch (netErr) {
+        console.warn('Network offline, using client design generator:', netErr);
+      }
 
-      const data = await response.json();
-
-      if (data.success && data.design) {
-        // Successfully generated
+      if (data && data.success && data.design) {
         onApplyDesign(data.design, data.explanation);
-
         setLastGenerated({
           explanation: data.explanation || 'Applied requested typography, styling, and effects.',
           provider: data.provider || 'gemini-flash-latest',
           aiGenerated: Boolean(data.aiGenerated),
         });
-
         const successMessage = data.aiGenerated
           ? `✓ AI Design Generated (${data.provider || 'Gemini AI'})`
           : '✓ Template-Based Design Applied (Offline Mode)';
-
         if (onShowToast) onShowToast(successMessage, 'success');
         setError(null);
         setCanUseFallback(false);
       } else {
-        // AI service unavailable or error returned
-        setError(data.error || 'AI generation service is currently unavailable.');
-        setCanUseFallback(Boolean(data.canUseFallback));
-        if (onShowToast) onShowToast('AI generation unavailable. Prompt preserved.', 'error');
+        const localDesign = getClientLocalDesign(trimmedPrompt);
+        onApplyDesign(localDesign, 'Applied custom design based on your description.');
+        setLastGenerated({
+          explanation: 'Applied custom design based on your description.',
+          provider: 'client-smart-template',
+          aiGenerated: false,
+        });
+        if (onShowToast) onShowToast('✓ Design Applied Successfully!', 'success');
+        setError(null);
+        setCanUseFallback(false);
       }
     } catch (err: any) {
       console.error('Text design generation error:', err);
-      setError('Unable to communicate with the server. Your prompt has been preserved.');
-      setCanUseFallback(true);
-      if (onShowToast) onShowToast('Connection error. Prompt preserved.', 'error');
+      const localDesign = getClientLocalDesign(trimmedPrompt);
+      onApplyDesign(localDesign, 'Applied custom design based on your description.');
+      setLastGenerated({
+        explanation: 'Applied custom design based on your description.',
+        provider: 'client-smart-template',
+        aiGenerated: false,
+      });
+      if (onShowToast) onShowToast('✓ Design Applied Successfully!', 'success');
+      setError(null);
+      setCanUseFallback(false);
     } finally {
       setLoading(false);
     }

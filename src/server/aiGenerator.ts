@@ -706,25 +706,15 @@ export async function generateAiTextDesign(
 ): Promise<TextDesignAiResponse> {
   const cleanPrompt = prompt.trim();
 
-  // If AI Client is not configured on server
+  // If AI Client is not configured on server, use smart template engine
   if (!aiClient) {
-    if (fallbackRequested) {
-      const localDesign = buildLocalDesign(cleanPrompt);
-      return {
-        success: true,
-        design: localDesign,
-        provider: 'smart-template-engine',
-        aiGenerated: false,
-        explanation: 'Generated using template engine fallback: ' + localDesign.explanation,
-      };
-    }
+    const localDesign = buildLocalDesign(cleanPrompt);
     return {
-      success: false,
-      error: 'Gemini AI service is not initialized on the server (API key not configured). Your prompt is preserved.',
-      provider: 'offline',
+      success: true,
+      design: localDesign,
+      provider: 'smart-template-engine',
       aiGenerated: false,
-      canUseFallback: true,
-      explanation: '',
+      explanation: 'Generated using template engine fallback: ' + localDesign.explanation,
     };
   }
 
@@ -819,26 +809,14 @@ Return ONLY a raw JSON object (strictly no markdown backticks, no code fence, ra
       aiGenerated: true,
     };
   } catch (err: any) {
-    console.warn('[AI Text Design] Gemini API call failed:', err?.message || err);
-
-    if (fallbackRequested) {
-      const localDesign = buildLocalDesign(cleanPrompt);
-      return {
-        success: true,
-        design: localDesign,
-        provider: 'smart-template-engine',
-        aiGenerated: false,
-        explanation: 'Generated using template engine fallback: ' + localDesign.explanation,
-      };
-    }
-
+    console.warn('[AI Text Design] Gemini API call failed, using template engine:', err?.message || err);
+    const localDesign = buildLocalDesign(cleanPrompt);
     return {
-      success: false,
-      error: `Gemini AI service encountered an error (${err?.message || 'Upstream service error'}). Your prompt has been preserved.`,
-      provider: 'error',
+      success: true,
+      design: localDesign,
+      provider: 'smart-template-engine',
       aiGenerated: false,
-      canUseFallback: true,
-      explanation: '',
+      explanation: 'Generated using template engine fallback: ' + localDesign.explanation,
     };
   }
 }

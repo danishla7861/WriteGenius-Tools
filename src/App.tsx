@@ -25,6 +25,7 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { TextDesignToolPage } from './pages/TextDesignToolPage';
+import { WebsiteDesignStudioPage } from './pages/WebsiteDesignStudioPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { getInitialTheme, applyTheme, ThemeMode } from './utils/themeUtils';
 
@@ -99,6 +100,7 @@ export default function App() {
 
             {/* Dedicated Text Design Tool Page */}
             <Route path="/text-design-tool" element={<TextDesignToolPage onShowToast={showToast} />} />
+            <Route path="/tools/website-design-studio" element={<WebsiteDesignStudioPage onShowToast={showToast} />} />
 
             {/* Individual Dedicated Tool Pages (/tools/:toolSlug AND /:slug for maximum discoverability) */}
             <Route path="/tools/:toolSlug" element={<ToolDetailPage onShowToast={showToast} />} />
